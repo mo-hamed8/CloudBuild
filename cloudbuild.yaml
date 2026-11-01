@@ -1,0 +1,34 @@
+steps:
+  # 1. Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'me-central1-docker.pkg.dev/$PROJECT_ID/test-cloud-build/test-cloud-build:$COMMIT_SHA'
+      - '.'
+
+  # 2. Push image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'me-central1-docker.pkg.dev/$PROJECT_ID/test-cloud-build/test-cloud-build:$COMMIT_SHA'
+
+  # 3. Deploy image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'test-cloud-build'
+      - '--image'
+      - 'me-central1-docker.pkg.dev/$PROJECT_ID/test-cloud-build/test-cloud-build:$COMMIT_SHA'
+      - '--region'
+      - 'me-central1'
+      - '--platform'
+      - 'managed'
+
+images:
+  - 'me-central1-docker.pkg.dev/$PROJECT_ID/test-cloud-build/test-cloud-build:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
